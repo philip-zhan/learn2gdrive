@@ -13,10 +13,20 @@ user_name = getpass.getuser()
 for folder_name in glob.glob("/Users/{}/Downloads/*".format(user_name)):
     match = re.search(folder_name_regex, folder_name)
     if match is not None:
-        for file_name in glob.glob("{}/**".format(folder_name), recursive=True):
-            file_name = file_name.replace(folder_name, "")
-            src = folder_name + file_name
-            dst = "/Users/{}/Google Drive/{}{}".format(user_name, match.group(1), file_name)
-            if not os.path.exists(dst):
+        new_folder_name = match.group(1)
+        files_in_gdrive = []
+        for file_in_gdrive in glob.iglob(
+                "/Users/{}/Google Drive/{}/**".format(user_name, new_folder_name),
+                recursive=True):
+            if os.path.isfile(file_in_gdrive):
+                files_in_gdrive.append(file_in_gdrive[file_in_gdrive.rindex('/'):])
+
+        for file_in_download in glob.glob("{}/**".format(folder_name), recursive=True):
+            file_in_download = file_in_download.replace(folder_name, "")
+            src = folder_name + file_in_download
+            dst = "/Users/{}/Google Drive/{}{}".format(user_name, new_folder_name, file_in_download)
+            if (file_in_download != "/Table of Contents.html") \
+                    and (file_in_download not in files_in_gdrive) \
+                    and (not os.path.exists(dst)):
                 shutil.move(src, dst)
-                print(dst)
+                print(file_in_download)
